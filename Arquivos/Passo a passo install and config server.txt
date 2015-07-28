@@ -1,0 +1,48 @@
+1- Baixar e extrair em um diretório qualquer o Wildfly 9 - Final 
+2- Baixar e instalar o mysql-installer-community-5.6.25.0 (usuário: root, senha: root)
+3- Criar uma base de dados chamada "vendingmachine_db"
+	CREATE DATABASE vendingmachine_db;
+4- Criar o datasource "vendingmachine-ds" dentro do Wildfly 9 para acesso ao banco de dados
+	a.Edite o arquivo %WILDFLY9_HOME%\standalone\configuration\standalone.xml e dentro da tag <datasources> adicione o novo datasource abaixo:
+		<datasource jndi-name="java:jboss/datasources/vendingmachine-ds" pool-name="vendingmachine-ds" enabled="true" use-java-context="true">
+			<connection-url>jdbc:mysql://localhost:3306/vendingmachine_db</connection-url>
+			<driver>mysql</driver>
+			<security>
+				<user-name>root</user-name>
+				<password>root</password>
+			</security>
+		</datasource>
+	b. Dentro da tag <drivers> adicione o driver do MySQL abaixo:
+		<driver name="mysql" module="com.mysql">
+			<xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>
+		</driver>
+		
+5- Acesse o diretório %WILDFLY9_HOME%/modules/system/layers/base/com e crie o diretório "mysql"" e seu subdiretório "main".
+	Dentro da pasta main coloque o arquivo .jar do driver JDBC do MySQL.
+	Ainda dentro da pasta main, crie um arquivo chamado "module.xml" e dentro dele adicione as seguintes linhas de código:
+
+	<?xml version="1.0" encoding="UTF-8"?>
+	 <module xmlns="urn:jboss:module:1.3" name="com.mysql">
+		<resources>
+			<!-- Dentro de "path" coloque o nome completo do seu jar -->
+			<!-- Nota: Não se esqueça de colocar '.jar' no final do nome, assim como no exemplo abaixo -->
+			<resource-root path="mysql-connector-java-5.1.36-bin.jar"/>
+		</resources>
+		<dependencies>
+			<module name="javax.api"/>
+			<module name="javax.transaction.api"/>
+			<module name="javax.servlet.api" optional="true"/>
+		</dependencies>
+	</module>
+	
+6- No arquivo %WILDFLY9_HOME%/standalone/configuration/standalone.xml altere a tag "servlet-container" e adicione o atributo allow-non-standard-wrappers="true"
+	Exemplo: <servlet-container name="default" allow-non-standard-wrappers="true">
+                <jsp-config/>
+                <websockets/>
+            </servlet-container>
+
+7- Determine o diretório onde o arquivo de log da aplicação será gravado através do arquivo log4g.xml
+Por default, o diretório será "C:\Wildfly 8.2\standalone\log\app.log"
+Caso o sistema operacional do servidor for Linux, será obrigatório efetuar a mudança do diretório de log da aplicação!
+	
+8- Suba o Wildfly 9 através do arquivo %WILDFLY9_HOME%\standalone.bat
